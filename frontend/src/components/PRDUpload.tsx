@@ -1,0 +1,282 @@
+import { useState, useCallback } from 'react';
+
+interface PRDUploadProps {
+  onPRDParsed: (prd: ParsedPRD) => void;
+}
+
+export interface ParsedTask {
+  title: string;
+  description?: string;
+  completed: boolean;
+}
+
+export interface ParsedPRD {
+  title: string;
+  overview: string;
+  techStack: { category: string; technology: string }[];
+  phases: {
+    name: string;
+    description?: string;
+    tasks: ParsedTask[];
+  }[];
+  rawMarkdown: string;
+}
+
+// Simple markdown parser for PRDs
+function parsePRDMarkdown(markdown: string): ParsedPRD {
+  const lines = markdown.split('\n');
+
+  let title = '';
+  let overview = '';
+  const techStack: { category: string; technology: string }[] = [];
+  const phases: ParsedPRD['phases'] = [];
+
+  let currentSection = '';
+  let currentPhase: ParsedPRD['phases'][0] | null = null;
+  let overviewLines: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Main title
+    if (trimmed.startsWith('# ') && !title) {
+      title = trimmed.replace('# ', '');
+      continue;
+    }
+
+    // Section headers
+    if (trimmed.startsWith('## ')) {
+      const sectionName = trimmed.replace('## ', '').toLowerCase();
+
+      if (sectionName.includes('overview') || sectionName.includes('about')) {
+        currentSection = 'overview';
+      } else if (sectionName.includes('tech') || sectionName.includes('stack')) {
+        currentSection = 'techStack';
+      } else if (sectionName.includes('feature') || sectionName.includes('phase') || sectionName.includes('milestone')) {
+        currentSection = 'phases';
+      }
+      continue;
+    }
+
+    // Phase headers (### )
+    if (trimmed.startsWith('### ') && currentSection === 'phases') {
+      if (currentPhase) {
+        phases.push(currentPhase);
+      }
+      currentPhase = {
+        name: trimmed.replace('### ', '').replace(/^Phase \d+:\s*/i, ''),
+        tasks: [],
+      };
+      continue;
+    }
+
+    // Content based on section
+    if (currentSection === 'overview' && trimmed) {
+      overviewLines.push(trimmed);
+    }
+
+    if (currentSection === 'techStack' && trimmed.startsWith('- ')) {
+      const item = trimmed.replace('- ', '');
+      const [category, technology] = item.split(':').map(s => s.trim());
+      if (category && technology) {
+        techStack.push({ category, technology });
+      } else {
+        techStack.push({ category: 'Other', technology: item });
+      }
+    }
+
+    if (currentSection === 'phases' && currentPhase && trimmed.startsWith('- ')) {
+      // Check if task is marked as completed [x] or [X]
+      const isCompleted = /^- \[[xX]\]/.test(trimmed);
+      const taskText = trimmed.replace(/^- \[[ xX]\]\s*/i, '').replace(/^- /, '');
+      currentPhase.tasks.push({ title: taskText, completed: isCompleted });
+    }
+  }
+
+  // Don't forget the last phase
+  if (currentPhase) {
+    phases.push(currentPhase);
+  }
+
+  overview = overviewLines.join(' ').slice(0, 500);
+
+  // If no phases found, create a default one
+  if (phases.length === 0) {
+    phases.push({
+      name: 'Tasks',
+      tasks: [{ title: 'Review and break down PRD', completed: false }],
+    });
+  }
+
+  return {
+    title: title || 'Untitled Project',
+    overview: overview || 'No overview provided.',
+    techStack,
+    phases,
+    rawMarkdown: markdown,
+  };
+}
+
+export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [markdown, setMarkdown] = useState('');
+  const [error, setError] = useState('');
+
+  const handleFile = useCallback((file: File) => {
+    if (!file.name.endsWith('.md') && file.type !== 'text/markdown' && file.type !== 'text/plain') {
+      setError('Please upload a markdown (.md) file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      setMarkdown(content);
+      setError('');
+    };
+    reader.onerror = () => {
+      setError('Failed to read file');
+    };
+    reader.readAsText(file);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      handleFile(file);
+    }
+  }, [handleFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleParse = () => {
+    if (!markdown.trim()) {
+      setError('Please upload or paste your PRD');
+      return;
+    }
+
+    try {
+      const parsed = parsePRDMarkdown(markdown);
+      onPRDParsed(parsed);
+    } catch (err) {
+      setError('Failed to parse PRD. Please check the format.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-2xl">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Claude Kanban</h1>
+          <p className="text-gray-500">Upload your PRD to get started</p>
+        </div>
+
+        <div className="bg-white rounded-2xl border-2 border-gray-900 shadow-3d p-6">
+          {/* Drop zone */}
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            className={`
+              border-2 border-dashed rounded-xl p-8 text-center
+              transition-colors duration-150 mb-4
+              ${isDragging
+                ? 'border-orange-400 bg-orange-50'
+                : 'border-gray-300 hover:border-gray-400'
+              }
+            `}
+          >
+            <div className="text-4xl mb-3">📄</div>
+            <p className="text-gray-600 mb-2">
+              Drag & drop your <span className="font-semibold">PRD.md</span> file here
+            </p>
+            <p className="text-gray-400 text-sm mb-4">or</p>
+            <label className="inline-block">
+              <input
+                type="file"
+                accept=".md,.markdown,.txt"
+                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                className="hidden"
+              />
+              <span className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 cursor-pointer transition-colors">
+                Browse files
+              </span>
+            </label>
+          </div>
+
+          {/* Or paste */}
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center">
+              <span className="px-3 bg-white text-sm text-gray-400">or paste markdown</span>
+            </div>
+          </div>
+
+          {/* Textarea */}
+          <textarea
+            value={markdown}
+            onChange={(e) => {
+              setMarkdown(e.target.value);
+              setError('');
+            }}
+            placeholder={`# My Project
+
+## Overview
+A brief description of your project...
+
+## Tech Stack
+- Frontend: React + TypeScript
+- Backend: Node.js
+
+## Features
+
+### Phase 1: Foundation
+- [ ] Project setup
+- [ ] Database schema
+- [ ] Basic auth
+
+### Phase 2: Core Features
+- [ ] Main feature 1
+- [ ] Main feature 2`}
+            className="w-full h-48 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3
+              text-sm text-gray-700 font-mono placeholder-gray-400
+              focus:outline-none focus:border-gray-900 focus:shadow-3d-sm
+              transition-all resize-none"
+          />
+
+          {error && (
+            <p className="text-red-500 text-sm mt-2">{error}</p>
+          )}
+
+          {/* Parse button */}
+          <button
+            onClick={handleParse}
+            disabled={!markdown.trim()}
+            className="w-full mt-4 py-3 bg-gray-900 text-white rounded-xl font-semibold
+              border-2 border-gray-900
+              hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed
+              transition-colors"
+          >
+            Parse PRD
+          </button>
+        </div>
+
+        <p className="text-center text-gray-400 text-sm mt-6">
+          Your PRD stays local — nothing is sent to our servers
+        </p>
+      </div>
+    </div>
+  );
+}

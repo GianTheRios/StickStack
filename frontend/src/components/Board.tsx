@@ -1,0 +1,214 @@
+import { useState, useEffect } from 'react';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import { Column } from './Column';
+import { StickyNote } from './StickyNote';
+import { StatusPanel } from './StatusPanel';
+import { CreateTaskModal } from './CreateTaskModal';
+import { TaskDetailModal } from './TaskDetailModal';
+import { useTasks } from '../hooks/useTasks';
+import { useWebSocket } from '../hooks/useWebSocket';
+import type { Task, TaskStatus } from '../types';
+import { COLUMNS } from '../types';
+import type { ParsedPRD } from './PRDUpload';
+
+interface BoardProps {
+  initialPRD?: ParsedPRD | null;
+  onBackToPRD?: () => void;
+}
+
+export function Board({ initialPRD, onBackToPRD }: BoardProps) {
+  const { tasks, isLoading, createTask, updateTask, deleteTask, moveTask, setTasks } = useTasks();
+  const { isConnected, claudeProgress, onTaskCreated, onTaskUpdated, onTaskDeleted } = useWebSocket();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Configure drag sensor with activation constraint
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px movement required before drag starts
+      },
+    })
+  );
+
+  // Handle WebSocket events
+  useEffect(() => {
+    onTaskCreated((task) => {
+      setTasks((prev) => {
+        if (prev.some((t) => t.id === task.id)) return prev;
+        return [task, ...prev];
+      });
+    });
+
+    onTaskUpdated((task) => {
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
+    });
+
+    onTaskDeleted((id) => {
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    });
+  }, [onTaskCreated, onTaskUpdated, onTaskDeleted, setTasks]);
+
+  const getTasksByStatus = (status: TaskStatus): Task[] => {
+    return tasks.filter((task) => task.status === status);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const task = tasks.find((t) => t.id === event.active.id);
+    if (task) setActiveTask(task);
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveTask(null);
+
+    const { active, over } = event;
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const newStatus = over.id as TaskStatus;
+
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || task.status === newStatus) return;
+
+    // Optimistically update
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+
+    try {
+      await moveTask(taskId, newStatus);
+    } catch (error) {
+      // Revert on error
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: task.status } : t))
+      );
+      console.error('Failed to move task:', error);
+    }
+  };
+
+  const handleDeleteTask = async (id: string) => {
+    if (!confirm('Delete this task?')) return;
+    try {
+      await deleteTask(id);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  };
+
+  const handleCreateTask = async (title: string, description?: string, priority?: 'low' | 'medium' | 'high') => {
+    await createTask(title, description, priority);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 max-w-[1500px] mx-auto">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-4">
+              {onBackToPRD && (
+                <button
+                  onClick={onBackToPRD}
+                  className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
+                  title="Back to PRD"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
+              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+                {initialPRD?.title || 'Claude Kanban'}
+              </h1>
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-white text-gray-900
+                px-4 py-2 rounded-xl
+                text-sm font-semibold
+                border-2 border-gray-900
+                shadow-3d-sm
+                hover:shadow-3d hover:-translate-x-px hover:-translate-y-px
+                active:shadow-none active:translate-x-[3px] active:translate-y-[3px]
+                transition-all duration-150
+                flex items-center gap-2"
+            >
+              <span className="text-base leading-none">+</span>
+              New Task
+            </button>
+          </div>
+
+          <StatusPanel
+            progress={claudeProgress}
+            isConnected={isConnected}
+            tasks={tasks}
+          />
+        </header>
+
+        {/* Board */}
+        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="flex gap-5 overflow-x-auto pb-6">
+            {COLUMNS.map((column) => (
+              <Column
+                key={column.id}
+                id={column.id}
+                title={column.title}
+                tasks={getTasksByStatus(column.id)}
+                onDeleteTask={handleDeleteTask}
+                onTaskClick={(task) => setSelectedTask(task)}
+              />
+            ))}
+          </div>
+
+          <DragOverlay>
+            {activeTask && (
+              <div className="rotate-3 scale-105 w-[260px]">
+                <StickyNote task={activeTask} onDelete={() => {}} />
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      </div>
+
+      <CreateTaskModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateTask}
+      />
+
+      <TaskDetailModal
+        task={selectedTask}
+        isOpen={!!selectedTask}
+        onClose={() => setSelectedTask(null)}
+        onUpdate={async (id, updates) => {
+          await updateTask(id, updates);
+          // Update selected task with new data
+          setSelectedTask((prev) => prev ? { ...prev, ...updates } : null);
+        }}
+        onDelete={async (id) => {
+          await deleteTask(id);
+        }}
+        onMoveToInProgress={async (id) => {
+          await moveTask(id, 'in_progress');
+        }}
+      />
+    </div>
+  );
+}
