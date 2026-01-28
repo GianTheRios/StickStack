@@ -47,7 +47,8 @@ export function useTasks(): UseTasksReturn {
     });
     if (!response.ok) throw new Error('Failed to create task');
     const task = await response.json();
-    setTasks((prev) => [task, ...prev]);
+    // Don't add to state here - WebSocket onTaskCreated will handle it
+    // This prevents duplicate tasks from race conditions
     return task;
   }, []);
 
@@ -68,7 +69,7 @@ export function useTasks(): UseTasksReturn {
       method: 'DELETE',
     });
     if (!response.ok) throw new Error('Failed to delete task');
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    // Don't remove from state here - WebSocket onTaskDeleted will handle it
   }, []);
 
   const moveTask = useCallback(async (id: string, newStatus: TaskStatus): Promise<Task> => {

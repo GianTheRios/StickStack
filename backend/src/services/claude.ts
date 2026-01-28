@@ -59,7 +59,7 @@ Please complete this task. Work step by step, explaining what you're doing as yo
     });
 
     // Spawn claude CLI with the prompt
-    const claudeProcess = spawn('claude', ['-p', prompt, '--no-input'], {
+    const claudeProcess = spawn('claude', ['-p', prompt], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
     });
@@ -162,7 +162,7 @@ async function runSingleIteration(
   return new Promise((resolve) => {
     let fullOutput = '';
 
-    const claudeProcess = spawn('claude', ['-p', prompt, '--no-input'], {
+    const claudeProcess = spawn('claude', ['-p', prompt], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
     });

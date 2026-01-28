@@ -76,7 +76,7 @@ export function Column({ id, title, tasks, onDeleteTask, onTaskClick }: ColumnPr
 
       {/* Tasks area */}
       <div className="p-3 min-h-[200px] max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin">
-        <div className="grid gap-3 justify-items-center">
+        <div className="flex flex-col gap-3 items-center">
           {visibleTasks.map((task) => (
             <StickyNote
               key={task.id}

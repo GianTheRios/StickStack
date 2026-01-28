@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
+import confetti from 'canvas-confetti';
 import { Column } from './Column';
 import { StickyNote } from './StickyNote';
 import { StatusPanel } from './StatusPanel';
@@ -21,6 +22,54 @@ import type { Task, TaskStatus } from '../types';
 import { COLUMNS } from '../types';
 import type { ParsedPRD } from './PRDUpload';
 
+// Celebration confetti burst
+function celebrateCompletion() {
+  const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
+
+  // Big initial burst
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { x: 0.5, y: 0.6 },
+    colors,
+  });
+
+  // Side cannons
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.7 },
+      colors,
+    });
+    confetti({
+      particleCount: 50,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.7 },
+      colors,
+    });
+  }, 150);
+
+  setTimeout(() => {
+    confetti({
+      particleCount: 50,
+      angle: 60,
+      spread: 60,
+      origin: { x: 0, y: 0.7 },
+      colors,
+    });
+    confetti({
+      particleCount: 50,
+      angle: 120,
+      spread: 60,
+      origin: { x: 1, y: 0.7 },
+      colors,
+    });
+  }, 300);
+}
+
 interface BoardProps {
   initialPRD?: ParsedPRD | null;
   onBackToPRD?: () => void;
@@ -32,6 +81,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const prevTaskStatusRef = useRef<Map<string, TaskStatus>>(new Map());
 
   // Configure drag sensor with activation constraint
   const sensors = useSensors(
@@ -42,9 +92,19 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
     })
   );
 
+  // Initialize status tracking for existing tasks
+  useEffect(() => {
+    tasks.forEach((task) => {
+      if (!prevTaskStatusRef.current.has(task.id)) {
+        prevTaskStatusRef.current.set(task.id, task.status);
+      }
+    });
+  }, [tasks]);
+
   // Handle WebSocket events
   useEffect(() => {
     onTaskCreated((task) => {
+      prevTaskStatusRef.current.set(task.id, task.status);
       setTasks((prev) => {
         if (prev.some((t) => t.id === task.id)) return prev;
         return [task, ...prev];
@@ -52,6 +112,12 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
     });
 
     onTaskUpdated((task) => {
+      // Check if task just moved to done (e.g., Claude/Ralph completed it)
+      const prevStatus = prevTaskStatusRef.current.get(task.id);
+      if (task.status === 'done' && prevStatus && prevStatus !== 'done') {
+        celebrateCompletion();
+      }
+      prevTaskStatusRef.current.set(task.id, task.status);
       setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
     });
 
@@ -80,6 +146,14 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
     const task = tasks.find((t) => t.id === taskId);
     if (!task || task.status === newStatus) return;
+
+    // Celebrate if moving to done!
+    if (newStatus === 'done' && task.status !== 'done') {
+      celebrateCompletion();
+    }
+
+    // Update tracking ref
+    prevTaskStatusRef.current.set(taskId, newStatus);
 
     // Optimistically update
     setTasks((prev) =>
