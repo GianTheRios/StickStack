@@ -37,8 +37,6 @@ export function TaskDetailModal({
   const [ralphEnabled, setRalphEnabled] = useState(false);
   const [ralphMaxIterations, setRalphMaxIterations] = useState(10);
   const [ralphCompletionPromise, setRalphCompletionPromise] = useState('TASK_COMPLETE');
-  const [projectDirectory, setProjectDirectory] = useState('');
-  const [allowShellCommands, setAllowShellCommands] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -52,8 +50,6 @@ export function TaskDetailModal({
       setRalphEnabled(!!task.ralph_enabled);
       setRalphMaxIterations(task.ralph_max_iterations || 10);
       setRalphCompletionPromise(task.ralph_completion_promise || 'TASK_COMPLETE');
-      setProjectDirectory(task.project_directory || '');
-      setAllowShellCommands(!!task.allow_shell_commands);
       setShowDeleteConfirm(false);
     }
   }, [task]);
@@ -66,9 +62,7 @@ export function TaskDetailModal({
     priority !== task.priority ||
     ralphEnabled !== !!task.ralph_enabled ||
     ralphMaxIterations !== (task.ralph_max_iterations || 10) ||
-    ralphCompletionPromise !== (task.ralph_completion_promise || 'TASK_COMPLETE') ||
-    projectDirectory !== (task.project_directory || '') ||
-    allowShellCommands !== !!task.allow_shell_commands;
+    ralphCompletionPromise !== (task.ralph_completion_promise || 'TASK_COMPLETE');
 
   const handleSave = async () => {
     if (!hasChanges) return;
@@ -81,8 +75,6 @@ export function TaskDetailModal({
         ralph_enabled: ralphEnabled ? 1 : 0,
         ralph_max_iterations: ralphMaxIterations,
         ralph_completion_promise: ralphCompletionPromise.trim() || 'TASK_COMPLETE',
-        project_directory: projectDirectory.trim() || null,
-        allow_shell_commands: allowShellCommands ? 1 : 0,
       });
     } finally {
       setIsSaving(false);
@@ -171,63 +163,6 @@ export function TaskDetailModal({
               placeholder="Add context, requirements, or instructions for Claude..."
               rows={4}
             />
-          </div>
-
-          {/* Project Directory */}
-          <div className="mb-5">
-            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
-              Project Directory
-            </label>
-            <input
-              type="text"
-              value={projectDirectory}
-              onChange={(e) => setProjectDirectory(e.target.value)}
-              className="w-full bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5
-                text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 font-mono
-                focus:outline-none focus:border-gray-900 dark:focus:border-gray-500 focus:shadow-3d-sm
-                transition-all"
-              placeholder="/Users/you/your-project"
-            />
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
-              Claude will read and edit files in this directory when working on this task.
-            </p>
-
-            {/* Allow Shell Commands Toggle */}
-            {projectDirectory && (
-              <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">⚡</span>
-                      <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
-                        Allow shell commands
-                      </span>
-                    </div>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                      Claude can run npm, git, and other commands. Only enable for projects you trust.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setAllowShellCommands(!allowShellCommands)}
-                    className={`
-                      relative w-12 h-7 rounded-full transition-colors flex items-center ml-3
-                      ${allowShellCommands
-                        ? 'bg-amber-500'
-                        : 'bg-gray-300 dark:bg-gray-600'
-                      }
-                    `}
-                  >
-                    <span
-                      className={`
-                        absolute w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200
-                        ${allowShellCommands ? 'left-6' : 'left-1'}
-                      `}
-                    />
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Priority */}

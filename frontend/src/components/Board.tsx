@@ -16,6 +16,7 @@ import { ProgressTracker } from './ProgressTracker';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
 import { ThemeToggle } from './ThemeToggle';
+import { ProjectSettings, useProjectSettings } from './ProjectSettings';
 import { useTasks } from '../hooks/useTasks';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Task, TaskStatus } from '../types';
@@ -78,6 +79,7 @@ interface BoardProps {
 export function Board({ initialPRD, onBackToPRD }: BoardProps) {
   const { tasks, isLoading, createTask, updateTask, deleteTask, moveTask, setTasks } = useTasks();
   const { isConnected, claudeProgress, ralphProgress, onTaskCreated, onTaskUpdated, onTaskDeleted } = useWebSocket();
+  const { projectDirectory, allowShellCommands, updateSettings } = useProjectSettings();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -155,13 +157,24 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
     // Update tracking ref
     prevTaskStatusRef.current.set(taskId, newStatus);
 
+    // When moving to in_progress, apply global settings if task doesn't have its own
+    const updates: Partial<Task> = { status: newStatus };
+    if (newStatus === 'in_progress' && projectDirectory) {
+      if (!task.project_directory) {
+        updates.project_directory = projectDirectory;
+      }
+      if (!task.allow_shell_commands && allowShellCommands) {
+        updates.allow_shell_commands = 1;
+      }
+    }
+
     // Optimistically update
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+      prev.map((t) => (t.id === taskId ? { ...t, ...updates } : t))
     );
 
     try {
-      await moveTask(taskId, newStatus);
+      await updateTask(taskId, updates);
     } catch (error) {
       // Revert on error
       setTasks((prev) =>
@@ -241,6 +254,12 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
             tasks={tasks}
           />
         </header>
+
+        <ProjectSettings
+          projectDirectory={projectDirectory}
+          allowShellCommands={allowShellCommands}
+          onSettingsChange={updateSettings}
+        />
 
         <ProgressTracker tasks={tasks} onToggleTask={moveTask} />
 
