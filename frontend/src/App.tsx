@@ -2,14 +2,29 @@ import { useState } from 'react';
 import { Board } from './components/Board';
 import { PRDUpload, type ParsedPRD } from './components/PRDUpload';
 import { PRDViewer } from './components/PRDViewer';
-import type { ViewMode } from './types';
+import type { ViewMode, AnalysisResult } from './types';
 
 const API_URL = 'http://localhost:3001';
+const STORAGE_KEY = 'stickstack_project_settings';
+
+function getProjectDirectory(): string {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed.projectDirectory || '';
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return '';
+}
 
 function App() {
   const [viewMode, setViewMode] = useState<ViewMode>('upload');
   const [parsedPRD, setParsedPRD] = useState<ParsedPRD | null>(null);
   const [isCreatingTasks, setIsCreatingTasks] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showExistingTasksDialog, setShowExistingTasksDialog] = useState(false);
   const [existingTaskCount, setExistingTaskCount] = useState(0);
 
@@ -18,8 +33,16 @@ function App() {
     setViewMode('prd');
   };
 
-  const createTasksFromPRD = async () => {
+  const createTasksFromPRD = async (analysisResults?: AnalysisResult[]) => {
     if (!parsedPRD) return;
+
+    // Build a map of task titles to analysis results for quick lookup
+    const analysisMap = new Map<string, AnalysisResult>();
+    if (analysisResults) {
+      for (const result of analysisResults) {
+        analysisMap.set(result.taskTitle, result);
+      }
+    }
 
     for (const phase of parsedPRD.phases) {
       for (const task of phase.tasks) {
@@ -38,8 +61,15 @@ function App() {
           continue;
         }
 
-        if (task.completed) {
-          const createdTask = await response.json();
+        const createdTask = await response.json();
+
+        // Check analysis results - mark as done if completed with high confidence
+        const analysis = analysisMap.get(task.title);
+        const shouldMarkDone =
+          task.completed ||
+          (analysis?.status === 'complete' && analysis?.confidence === 'high');
+
+        if (shouldMarkDone) {
           await fetch(`${API_URL}/api/tasks/${createdTask.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
@@ -59,8 +89,67 @@ function App() {
     }
   };
 
+  const analyzeAndCreateTasks = async () => {
+    if (!parsedPRD) return;
+
+    const projectDirectory = getProjectDirectory();
+
+    // If no project directory configured, skip analysis and create all in backlog
+    if (!projectDirectory) {
+      console.log('No project directory configured, skipping analysis');
+      await createTasksFromPRD();
+      return;
+    }
+
+    // Gather all tasks from PRD for analysis
+    const tasksToAnalyze = parsedPRD.phases.flatMap((phase) =>
+      phase.tasks.map((task) => ({
+        title: task.title,
+        description: task.description || `Phase: ${phase.name}`,
+      }))
+    );
+
+    setIsAnalyzing(true);
+
+    try {
+      const response = await fetch(`${API_URL}/api/analysis/codebase`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectDirectory,
+          tasks: tasksToAnalyze,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Analysis failed, falling back to backlog');
+        await createTasksFromPRD();
+        return;
+      }
+
+      const data = await response.json();
+      const results: AnalysisResult[] = data.results;
+
+      // Log analysis results for debugging
+      console.log('Analysis results:', results);
+      const completedCount = results.filter(
+        (r) => r.status === 'complete' && r.confidence === 'high'
+      ).length;
+      console.log(`Detected ${completedCount} completed tasks out of ${results.length}`);
+
+      // Create tasks with analysis results
+      await createTasksFromPRD(results);
+    } catch (error) {
+      console.error('Analysis error, falling back to backlog:', error);
+      // Fallback: create all tasks in backlog
+      await createTasksFromPRD();
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleStartProject = async () => {
-    if (!parsedPRD || isCreatingTasks) return;
+    if (!parsedPRD || isCreatingTasks || isAnalyzing) return;
 
     setIsCreatingTasks(true);
 
@@ -77,13 +166,14 @@ function App() {
         return;
       }
 
-      // No existing tasks, create from PRD
-      await createTasksFromPRD();
+      // No existing tasks, analyze codebase and create from PRD
+      await analyzeAndCreateTasks();
       setViewMode('kanban');
     } catch (error) {
       console.error('Failed to create tasks:', error);
     } finally {
       setIsCreatingTasks(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -93,12 +183,13 @@ function App() {
 
     try {
       await deleteAllTasks();
-      await createTasksFromPRD();
+      await analyzeAndCreateTasks();
       setViewMode('kanban');
     } catch (error) {
       console.error('Failed to start fresh:', error);
     } finally {
       setIsCreatingTasks(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -117,6 +208,7 @@ function App() {
   }
 
   if (viewMode === 'prd' && parsedPRD) {
+    const currentProjectDirectory = getProjectDirectory();
     return (
       <>
         <PRDViewer
@@ -124,6 +216,8 @@ function App() {
           onStartProject={handleStartProject}
           onBack={handleBackToUpload}
           isLoading={isCreatingTasks}
+          isAnalyzing={isAnalyzing}
+          projectDirectory={currentProjectDirectory}
         />
 
         {/* Existing Tasks Dialog */}

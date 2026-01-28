@@ -100,3 +100,11 @@ export interface RalphCompletePayload {
 
 // View modes for the app
 export type ViewMode = 'upload' | 'prd' | 'kanban';
+
+// Analysis result from codebase analysis
+export interface AnalysisResult {
+  taskTitle: string;
+  status: 'complete' | 'partial' | 'not_started' | 'unknown';
+  confidence: 'high' | 'medium' | 'low';
+  evidence: string;
+}

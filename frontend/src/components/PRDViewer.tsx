@@ -7,11 +7,13 @@ interface PRDViewerProps {
   onStartProject: () => void;
   onBack: () => void;
   isLoading?: boolean;
+  isAnalyzing?: boolean;
+  projectDirectory?: string;
 }
 
 const API_URL = 'http://localhost:3001';
 
-export function PRDViewer({ prd, onStartProject, onBack, isLoading }: PRDViewerProps) {
+export function PRDViewer({ prd, onStartProject, onBack, isLoading, isAnalyzing, projectDirectory }: PRDViewerProps) {
   const totalTasks = prd.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);
   const [showClaudeMd, setShowClaudeMd] = useState(false);
   const [claudeMdContent, setClaudeMdContent] = useState('');
@@ -205,16 +207,78 @@ export function PRDViewer({ prd, onStartProject, onBack, isLoading }: PRDViewerP
 
         {/* Start button */}
         <div className="sticky bottom-6">
+          {/* Analysis info banner */}
+          {projectDirectory && !isLoading && !isAnalyzing && (
+            <div className="mb-3 px-4 py-3 bg-blue-50 dark:bg-blue-950/30 rounded-xl border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2">
+                <span className="text-blue-500">🔍</span>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Will analyze <span className="font-mono font-medium">{projectDirectory}</span> to detect completed tasks
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Analyzing spinner with sticky note animation */}
+          {isAnalyzing && (
+            <div className="mb-3 px-4 py-4 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center gap-4">
+                <div className="relative w-10 h-10 flex-shrink-0">
+                  <svg viewBox="0 0 40 40" className="w-full h-full drop-shadow-md">
+                    {/* Shadow under the note */}
+                    <ellipse cx="20" cy="39" rx="12" ry="2" fill="rgba(0,0,0,0.15)" style={{ animation: 'shadow-pulse 1.5s infinite ease-in-out' }} />
+                    {/* Main sticky note body */}
+                    <path d="M4 4 H36 V28 L28 36 H4 Z" fill="#FFEB3B" />
+                    {/* Corner fold with flash animation */}
+                    <path d="M28 28 L36 28 L28 36 Z" fill="#FDD835" style={{ animation: 'corner-flash 1.5s infinite ease-in-out' }} />
+                    {/* Lines on the note */}
+                    <g opacity="0.25" stroke="#D4A017" strokeWidth="1.5" strokeLinecap="round">
+                      <line x1="8" y1="12" x2="26" y2="12" />
+                      <line x1="8" y1="18" x2="22" y2="18" />
+                      <line x1="8" y1="24" x2="18" y2="24" />
+                    </g>
+                  </svg>
+                  <style>{`
+                    @keyframes corner-flash {
+                      0%, 100% {
+                        fill: #FDD835;
+                      }
+                      50% {
+                        fill: #FFEE58;
+                      }
+                    }
+                    @keyframes shadow-pulse {
+                      0%, 100% {
+                        opacity: 0.15;
+                      }
+                      50% {
+                        opacity: 0.25;
+                      }
+                    }
+                  `}</style>
+                </div>
+                <div>
+                  <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                    Analyzing your codebase...
+                  </p>
+                  <p className="text-xs text-amber-600/70 dark:text-amber-400/70 mt-0.5">
+                    Detecting completed tasks
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             onClick={onStartProject}
-            disabled={isLoading}
+            disabled={isLoading || isAnalyzing}
             className="w-full py-4 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-bold text-lg
               border-2 border-gray-900 dark:border-gray-100 shadow-3d
               hover:bg-gray-700 dark:hover:bg-gray-300 hover:-translate-x-0.5 hover:-translate-y-0.5
               disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-x-0 disabled:hover:translate-y-0
               transition-all"
           >
-            {isLoading ? 'Creating tasks...' : 'Start Building with Claude'}
+            {isAnalyzing ? 'Analyzing codebase...' : isLoading ? 'Creating tasks...' : 'Start Building with Claude'}
           </button>
         </div>
       </div>

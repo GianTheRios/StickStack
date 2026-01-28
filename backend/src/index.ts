@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createServer } from 'http';
 import { createTasksRouter } from './routes/tasks.js';
 import { createPrdRouter } from './routes/prd.js';
+import { createAnalysisRouter } from './routes/analysis.js';
 import { initDatabase } from './services/database.js';
 
 const app = express();
@@ -49,6 +50,7 @@ function broadcast(type: string, payload: unknown): void {
 // Routes
 app.use('/api/tasks', createTasksRouter(broadcast));
 app.use('/api/prd', createPrdRouter());
+app.use('/api/analysis', createAnalysisRouter(broadcast));
 
 // Health check
 app.get('/health', (_req, res) => {
