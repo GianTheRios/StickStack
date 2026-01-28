@@ -15,36 +15,36 @@ A SaaS product that transforms PRD markdown files into visual roadmaps and lets 
 ## Features
 
 ### Phase 1: Core Infrastructure
-- [ ] Project setup with monorepo structure
-- [ ] Express server with CORS and JSON middleware
-- [ ] SQLite database initialization
-- [ ] WebSocket server for real-time updates
-- [ ] Task CRUD API endpoints
+- [x] Project setup with monorepo structure
+- [x] Express server with CORS and JSON middleware
+- [x] SQLite database initialization
+- [x] WebSocket server for real-time updates
+- [x] Task CRUD API endpoints
 
 ### Phase 2: Kanban Board
-- [ ] Board layout with 4 columns (Backlog, To Do, In Progress, Done)
-- [ ] Draggable sticky note components
-- [ ] Priority-based color coding (yellow, coral, mint)
-- [ ] 3D shadow design system
-- [ ] Real-time task sync via WebSocket
+- [x] Board layout with 4 columns (Backlog, To Do, In Progress, Done)
+- [x] Draggable sticky note components
+- [x] Priority-based color coding (yellow, coral, mint)
+- [x] 3D shadow design system
+- [x] Real-time task sync via WebSocket
 
 ### Phase 3: Claude Integration
-- [ ] Spawn Claude CLI as subprocess
-- [ ] Stream Claude output to frontend
-- [ ] Auto-trigger Claude when task moves to In Progress
-- [ ] Display live Claude status in StatusPanel
-- [ ] Cancel running Claude tasks
+- [x] Spawn Claude CLI as subprocess
+- [x] Stream Claude output to frontend
+- [x] Auto-trigger Claude when task moves to In Progress
+- [x] Display live Claude status in StatusPanel
+- [x] Cancel running Claude tasks
 
 ### Phase 4: PRD System
-- [ ] PRD upload component with drag-drop
-- [ ] Markdown parser for PRD structure
-- [ ] PRD visualization view with stats
-- [ ] CLAUDE.md auto-generation
+- [x] PRD upload component with drag-drop
+- [x] Markdown parser for PRD structure
+- [x] PRD visualization view with stats
+- [x] CLAUDE.md auto-generation
 - [ ] Task creation from PRD phases
 
 ### Phase 5: Polish & UX
-- [ ] Smooth drag animations
-- [ ] Loading states and error handling
+- [x] Smooth drag animations
+- [x] Loading states and error handling
 - [ ] Responsive layout
 - [ ] Keyboard shortcuts
-- [ ] Dark mode support
+- [x] Dark mode support

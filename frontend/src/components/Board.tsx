@@ -13,6 +13,7 @@ import { StickyNote } from './StickyNote';
 import { StatusPanel } from './StatusPanel';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
+import { ThemeToggle } from './ThemeToggle';
 import { useTasks } from '../hooks/useTasks';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Task, TaskStatus } from '../types';
@@ -110,14 +111,14 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400">Loading...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="text-gray-400 dark:text-gray-500">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
       <div className="p-6 max-w-[1500px] mx-auto">
         {/* Header */}
         <header className="mb-6">
@@ -126,7 +127,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
               {onBackToPRD && (
                 <button
                   onClick={onBackToPRD}
-                  className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
+                  className="p-2 text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   title="Back to PRD"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,25 +135,28 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
                   </svg>
                 </button>
               )}
-              <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                 {initialPRD?.title || 'Claude Kanban'}
               </h1>
             </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-white text-gray-900
-                px-4 py-2 rounded-xl
-                text-sm font-semibold
-                border-2 border-gray-900
-                shadow-3d-sm
-                hover:shadow-3d hover:-translate-x-px hover:-translate-y-px
-                active:shadow-none active:translate-x-[3px] active:translate-y-[3px]
-                transition-all duration-150
-                flex items-center gap-2"
-            >
-              <span className="text-base leading-none">+</span>
-              New Task
-            </button>
+            <div className="flex items-center gap-3">
+              <ThemeToggle />
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                  px-4 py-2 rounded-xl
+                  text-sm font-semibold
+                  border-2 border-gray-900 dark:border-gray-600
+                  shadow-3d-sm
+                  hover:shadow-3d hover:-translate-x-px hover:-translate-y-px
+                  active:shadow-none active:translate-x-[3px] active:translate-y-[3px]
+                  transition-all duration-150
+                  flex items-center gap-2"
+              >
+                <span className="text-base leading-none">+</span>
+                New Task
+              </button>
+            </div>
           </div>
 
           <StatusPanel

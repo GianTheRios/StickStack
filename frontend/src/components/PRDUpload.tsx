@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { ThemeToggle } from './ThemeToggle';
 
 interface PRDUploadProps {
   onPRDParsed: (prd: ParsedPRD) => void;
@@ -174,14 +175,19 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center p-6 transition-colors">
+      {/* Theme toggle in corner */}
+      <div className="fixed top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Claude Kanban</h1>
-          <p className="text-gray-500">Upload your PRD to get started</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Claude Kanban</h1>
+          <p className="text-gray-500 dark:text-gray-400">Upload your PRD to get started</p>
         </div>
 
-        <div className="bg-white rounded-2xl border-2 border-gray-900 shadow-3d p-6">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-900 dark:border-gray-600 shadow-3d p-6">
           {/* Drop zone */}
           <div
             onDrop={handleDrop}
@@ -191,16 +197,16 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
               border-2 border-dashed rounded-xl p-8 text-center
               transition-colors duration-150 mb-4
               ${isDragging
-                ? 'border-orange-400 bg-orange-50'
-                : 'border-gray-300 hover:border-gray-400'
+                ? 'border-orange-400 bg-orange-50 dark:bg-orange-950'
+                : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
               }
             `}
           >
             <div className="text-4xl mb-3">📄</div>
-            <p className="text-gray-600 mb-2">
+            <p className="text-gray-600 dark:text-gray-300 mb-2">
               Drag & drop your <span className="font-semibold">PRD.md</span> file here
             </p>
-            <p className="text-gray-400 text-sm mb-4">or</p>
+            <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">or</p>
             <label className="inline-block">
               <input
                 type="file"
@@ -208,7 +214,7 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
                 className="hidden"
               />
-              <span className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 cursor-pointer transition-colors">
+              <span className="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer transition-colors">
                 Browse files
               </span>
             </label>
@@ -217,10 +223,10 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
           {/* Or paste */}
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-3 bg-white text-sm text-gray-400">or paste markdown</span>
+              <span className="px-3 bg-white dark:bg-gray-900 text-sm text-gray-400 dark:text-gray-500">or paste markdown</span>
             </div>
           </div>
 
@@ -250,30 +256,30 @@ A brief description of your project...
 ### Phase 2: Core Features
 - [ ] Main feature 1
 - [ ] Main feature 2`}
-            className="w-full h-48 bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3
-              text-sm text-gray-700 font-mono placeholder-gray-400
-              focus:outline-none focus:border-gray-900 focus:shadow-3d-sm
+            className="w-full h-48 bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3
+              text-sm text-gray-700 dark:text-gray-200 font-mono placeholder-gray-400 dark:placeholder-gray-500
+              focus:outline-none focus:border-gray-900 dark:focus:border-gray-500 focus:shadow-3d-sm
               transition-all resize-none"
           />
 
           {error && (
-            <p className="text-red-500 text-sm mt-2">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>
           )}
 
           {/* Parse button */}
           <button
             onClick={handleParse}
             disabled={!markdown.trim()}
-            className="w-full mt-4 py-3 bg-gray-900 text-white rounded-xl font-semibold
-              border-2 border-gray-900
-              hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed
+            className="w-full mt-4 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-semibold
+              border-2 border-gray-900 dark:border-gray-100
+              hover:bg-gray-700 dark:hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed
               transition-colors"
           >
             Parse PRD
           </button>
         </div>
 
-        <p className="text-center text-gray-400 text-sm mt-6">
+        <p className="text-center text-gray-400 dark:text-gray-500 text-sm mt-6">
           Your PRD stays local — nothing is sent to our servers
         </p>
       </div>

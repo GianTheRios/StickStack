@@ -128,12 +128,12 @@ function App() {
 
         {/* Existing Tasks Dialog */}
         {showExistingTasksDialog && (
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl border-2 border-gray-900 shadow-3d w-full max-w-md p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
+          <div className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-900 dark:border-gray-600 shadow-3d w-full max-w-md p-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 Existing Tasks Found
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 You have <span className="font-semibold">{existingTaskCount} existing tasks</span> in your board.
                 Would you like to continue where you left off, or start fresh with this PRD?
               </p>
@@ -141,24 +141,24 @@ function App() {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleContinue}
-                  className="w-full py-3 bg-gray-900 text-white rounded-xl font-semibold
-                    border-2 border-gray-900
-                    hover:bg-gray-700 transition-colors"
+                  className="w-full py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-xl font-semibold
+                    border-2 border-gray-900 dark:border-gray-100
+                    hover:bg-gray-700 dark:hover:bg-gray-300 transition-colors"
                 >
                   Continue with existing tasks
                 </button>
                 <button
                   onClick={handleStartFresh}
-                  className="w-full py-3 bg-white text-gray-900 rounded-xl font-semibold
-                    border-2 border-gray-300
-                    hover:border-gray-900 hover:shadow-3d-sm
+                  className="w-full py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl font-semibold
+                    border-2 border-gray-300 dark:border-gray-600
+                    hover:border-gray-900 dark:hover:border-gray-400 hover:shadow-3d-sm
                     transition-all"
                 >
                   Start fresh (delete all tasks)
                 </button>
                 <button
                   onClick={() => setShowExistingTasksDialog(false)}
-                  className="w-full py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                  className="w-full py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   Cancel
                 </button>

@@ -43,12 +43,12 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
 
   return (
     <div
-      className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/20 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl border-2 border-gray-900 shadow-3d w-full max-w-md">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-gray-900 dark:border-gray-600 shadow-3d w-full max-w-md">
         {/* Header with color preview */}
-        <div className={`${selectedOption.bg} px-5 py-4 rounded-t-[14px] border-b-2 border-gray-900 transition-colors duration-200`}>
+        <div className={`${selectedOption.bg} px-5 py-4 rounded-t-[14px] border-b-2 border-gray-900 dark:border-gray-600 transition-colors duration-200`}>
           <h2 className="font-hand text-2xl font-bold text-gray-900">
             New Task
           </h2>
@@ -57,7 +57,7 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
         <div className="p-5">
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label htmlFor="title" className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+              <label htmlFor="title" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Task
               </label>
               <input
@@ -65,8 +65,8 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white border-2 border-gray-900 rounded-lg px-3 py-2.5
-                  text-gray-900 placeholder-gray-400
+                className="w-full bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-600 rounded-lg px-3 py-2.5
+                  text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                   focus:outline-none focus:shadow-3d-sm
                   transition-shadow"
                 placeholder="What needs to be done?"
@@ -75,16 +75,16 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
             </div>
 
             <div className="mb-5">
-              <label htmlFor="description" className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">
+              <label htmlFor="description" className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
                 Details for Claude
-                <span className="text-gray-400 font-normal ml-1">(optional)</span>
+                <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">(optional)</span>
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-white border-2 border-gray-900 rounded-lg px-3 py-2.5
-                  text-sm text-gray-900 placeholder-gray-400
+                className="w-full bg-white dark:bg-gray-800 border-2 border-gray-900 dark:border-gray-600 rounded-lg px-3 py-2.5
+                  text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500
                   focus:outline-none focus:shadow-3d-sm
                   transition-shadow resize-none"
                 placeholder="Add context or instructions..."
@@ -93,7 +93,7 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
             </div>
 
             <div className="mb-6">
-              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
                 Priority
               </label>
               <div className="flex gap-2">
@@ -108,8 +108,8 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
                       transition-all duration-150
                       border-2
                       ${priority === option.value
-                        ? `${option.bg} border-gray-900 shadow-3d-sm`
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                        ? `${option.bg} border-gray-900 dark:border-gray-600 shadow-3d-sm`
+                        : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                       }
                     `}
                   >
@@ -128,16 +128,16 @@ export function CreateTaskModal({ isOpen, onClose, onCreate }: CreateTaskModalPr
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!title.trim() || isSubmitting}
-                className="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold
-                  border-2 border-gray-900
-                  hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed
+                className="px-5 py-2 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 rounded-lg text-sm font-semibold
+                  border-2 border-gray-900 dark:border-gray-100
+                  hover:bg-gray-700 dark:hover:bg-gray-300 disabled:opacity-40 disabled:cursor-not-allowed
                   transition-colors"
               >
                 {isSubmitting ? 'Adding...' : 'Add Task'}
