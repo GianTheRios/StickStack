@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { getAllTasks, getTaskById, createTask, updateTask, deleteTask } from '../services/database.js';
-import { startClaudeTask, cancelClaudeTask } from '../services/claude.js';
+import { startClaudeTask, cancelClaudeTask, runRalphLoop, cancelRalphLoop, isRalphLoopRunning } from '../services/claude.js';
 import type { CreateTaskInput, UpdateTaskInput } from '../types/index.js';
 
 type BroadcastFn = (type: string, payload: unknown) => void;
@@ -57,15 +57,27 @@ export function createTasksRouter(broadcast: BroadcastFn): Router {
 
     broadcast('task:updated', task);
 
-    // If status changed to in_progress, start Claude
+    // If status changed to in_progress, start Claude (or Ralph loop)
     if (input.status === 'in_progress' && previousTask.status !== 'in_progress') {
-      // Start Claude task asynchronously
-      startClaudeTask(task, broadcast).catch(console.error);
+      // Check if Ralph loop is enabled
+      if (task.ralph_enabled) {
+        // Reset Ralph state for new run
+        updateTask(task.id, {
+          ralph_current_iteration: 0,
+          ralph_status: null,
+        });
+        // Start Ralph loop asynchronously
+        runRalphLoop(task, broadcast).catch(console.error);
+      } else {
+        // Start regular Claude task asynchronously
+        startClaudeTask(task, broadcast).catch(console.error);
+      }
     }
 
-    // If status changed from in_progress to something else, cancel Claude
+    // If status changed from in_progress to something else, cancel Claude/Ralph
     if (previousTask.status === 'in_progress' && input.status && input.status !== 'in_progress') {
       cancelClaudeTask(task.id);
+      cancelRalphLoop(task.id);
     }
 
     res.json(task);
@@ -75,8 +87,9 @@ export function createTasksRouter(broadcast: BroadcastFn): Router {
   router.delete('/:id', (req: Request, res: Response) => {
     const taskId = req.params.id;
 
-    // Cancel any running Claude process
+    // Cancel any running Claude process or Ralph loop
     cancelClaudeTask(taskId);
+    cancelRalphLoop(taskId);
 
     const deleted = deleteTask(taskId);
     if (!deleted) {

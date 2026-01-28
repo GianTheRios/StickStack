@@ -1,9 +1,17 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import type { WebSocketMessage, Task, ClaudeProgress } from '../types';
+import type {
+  WebSocketMessage,
+  Task,
+  ClaudeProgress,
+  RalphProgress,
+  RalphIterationStartPayload,
+  RalphCompletePayload,
+} from '../types';
 
 interface UseWebSocketReturn {
   isConnected: boolean;
   claudeProgress: ClaudeProgress | null;
+  ralphProgress: RalphProgress | null;
   onTaskCreated: (callback: (task: Task) => void) => void;
   onTaskUpdated: (callback: (task: Task) => void) => void;
   onTaskDeleted: (callback: (id: string) => void) => void;
@@ -13,6 +21,7 @@ export function useWebSocket(): UseWebSocketReturn {
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [claudeProgress, setClaudeProgress] = useState<ClaudeProgress | null>(null);
+  const [ralphProgress, setRalphProgress] = useState<RalphProgress | null>(null);
 
   const taskCreatedCallbackRef = useRef<((task: Task) => void) | null>(null);
   const taskUpdatedCallbackRef = useRef<((task: Task) => void) | null>(null);
@@ -61,6 +70,38 @@ export function useWebSocket(): UseWebSocketReturn {
             case 'claude:complete':
               setClaudeProgress(null);
               break;
+            case 'ralph:iteration_start': {
+              const payload = message.payload as RalphIterationStartPayload;
+              setRalphProgress({
+                taskId: payload.taskId,
+                iteration: payload.iteration,
+                maxIterations: payload.maxIterations,
+                status: 'iterating',
+              });
+              break;
+            }
+            case 'ralph:iteration_complete':
+              // Keep iterating status, just update will come via iteration_start
+              break;
+            case 'ralph:complete': {
+              const payload = message.payload as RalphCompletePayload;
+              setRalphProgress((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  iteration: payload.iteration,
+                  status:
+                    payload.reason === 'promise_fulfilled'
+                      ? 'completed'
+                      : payload.reason === 'max_reached'
+                        ? 'max_reached'
+                        : 'cancelled',
+                };
+              });
+              // Clear after a short delay so UI can show final state
+              setTimeout(() => setRalphProgress(null), 2000);
+              break;
+            }
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
@@ -90,6 +131,7 @@ export function useWebSocket(): UseWebSocketReturn {
   return {
     isConnected,
     claudeProgress,
+    ralphProgress,
     onTaskCreated,
     onTaskUpdated,
     onTaskDeleted,

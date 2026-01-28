@@ -110,9 +110,30 @@ export function StickyNote({ task, onDelete, onClick }: StickyNoteProps) {
         {/* Claude working indicator */}
         {isWorking && (
           <div className="mt-auto pt-2 flex items-center gap-1.5">
-            <span className="claude-working text-sm">✏️</span>
-            <span className="text-[10px] font-semibold text-orange-500 tracking-wide">
-              Working
+            {task.ralph_enabled ? (
+              <>
+                <span className="claude-working text-sm">🔄</span>
+                <span className="text-[10px] font-semibold text-sky-600 tracking-wide">
+                  {task.ralph_current_iteration}/{task.ralph_max_iterations}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="claude-working text-sm">✏️</span>
+                <span className="text-[10px] font-semibold text-orange-500 tracking-wide">
+                  Working
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Ralph enabled badge (when not working) */}
+        {!isWorking && !!task.ralph_enabled && (
+          <div className="mt-auto pt-2 flex items-center gap-1">
+            <span className="text-xs">🔄</span>
+            <span className="text-[9px] font-medium text-sky-500 dark:text-sky-400">
+              Ralph
             </span>
           </div>
         )}

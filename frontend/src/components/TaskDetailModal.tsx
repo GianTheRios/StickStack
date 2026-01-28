@@ -34,6 +34,9 @@ export function TaskDetailModal({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
+  const [ralphEnabled, setRalphEnabled] = useState(false);
+  const [ralphMaxIterations, setRalphMaxIterations] = useState(10);
+  const [ralphCompletionPromise, setRalphCompletionPromise] = useState('TASK_COMPLETE');
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -44,6 +47,9 @@ export function TaskDetailModal({
       setTitle(task.title);
       setDescription(task.description || '');
       setPriority(task.priority);
+      setRalphEnabled(!!task.ralph_enabled);
+      setRalphMaxIterations(task.ralph_max_iterations || 10);
+      setRalphCompletionPromise(task.ralph_completion_promise || 'TASK_COMPLETE');
       setShowDeleteConfirm(false);
     }
   }, [task]);
@@ -53,7 +59,10 @@ export function TaskDetailModal({
   const hasChanges =
     title !== task.title ||
     description !== (task.description || '') ||
-    priority !== task.priority;
+    priority !== task.priority ||
+    ralphEnabled !== !!task.ralph_enabled ||
+    ralphMaxIterations !== (task.ralph_max_iterations || 10) ||
+    ralphCompletionPromise !== (task.ralph_completion_promise || 'TASK_COMPLETE');
 
   const handleSave = async () => {
     if (!hasChanges) return;
@@ -63,6 +72,9 @@ export function TaskDetailModal({
         title: title.trim(),
         description: description.trim() || null,
         priority,
+        ralph_enabled: ralphEnabled ? 1 : 0,
+        ralph_max_iterations: ralphMaxIterations,
+        ralph_completion_promise: ralphCompletionPromise.trim() || 'TASK_COMPLETE',
       });
     } finally {
       setIsSaving(false);
@@ -183,6 +195,86 @@ export function TaskDetailModal({
                   </div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Ralph Loop Configuration */}
+          <div className="mb-6 p-4 bg-sky-50 dark:bg-sky-950/30 rounded-xl border-2 border-sky-200 dark:border-sky-800">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">🔄</span>
+                <label className="text-sm font-semibold text-sky-700 dark:text-sky-300">
+                  Ralph Loop
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRalphEnabled(!ralphEnabled)}
+                className={`
+                  relative w-12 h-7 rounded-full transition-colors flex items-center
+                  ${ralphEnabled
+                    ? 'bg-sky-500'
+                    : 'bg-gray-300 dark:bg-gray-600'
+                  }
+                `}
+              >
+                <span
+                  className={`
+                    absolute w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200
+                    ${ralphEnabled ? 'left-6' : 'left-1'}
+                  `}
+                />
+              </button>
+            </div>
+            <p className="text-xs text-sky-600 dark:text-sky-400 mb-3">
+              Claude will iterate on this task until a completion promise is detected.
+            </p>
+
+            <div
+              className="grid transition-all duration-300 ease-out"
+              style={{
+                gridTemplateRows: ralphEnabled ? '1fr' : '0fr',
+                opacity: ralphEnabled ? 1 : 0,
+              }}
+            >
+              <div className="overflow-hidden">
+                <div className="space-y-3 pt-3 mt-3 border-t border-sky-200 dark:border-sky-700">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-sky-700 dark:text-sky-300 w-28">
+                      Max Iterations
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={50}
+                      value={ralphMaxIterations}
+                      onChange={(e) => setRalphMaxIterations(Math.max(1, Math.min(50, parseInt(e.target.value) || 10)))}
+                      className="flex-1 bg-white dark:bg-gray-800 border-2 border-sky-200 dark:border-sky-700 rounded-lg px-3 py-1.5
+                        text-sm text-gray-900 dark:text-gray-100
+                        focus:outline-none focus:border-sky-500 dark:focus:border-sky-400
+                        transition-all"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs font-medium text-sky-700 dark:text-sky-300 w-28">
+                      Promise Text
+                    </label>
+                    <input
+                      type="text"
+                      value={ralphCompletionPromise}
+                      onChange={(e) => setRalphCompletionPromise(e.target.value)}
+                      placeholder="TASK_COMPLETE"
+                      className="flex-1 bg-white dark:bg-gray-800 border-2 border-sky-200 dark:border-sky-700 rounded-lg px-3 py-1.5
+                        text-sm text-gray-900 dark:text-gray-100 font-mono
+                        focus:outline-none focus:border-sky-500 dark:focus:border-sky-400
+                        transition-all"
+                    />
+                  </div>
+                  <p className="text-[10px] text-sky-500 dark:text-sky-400">
+                    Claude should output <code className="bg-sky-100 dark:bg-sky-900 px-1 rounded">&lt;promise&gt;{ralphCompletionPromise || 'TASK_COMPLETE'}&lt;/promise&gt;</code> when done.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 

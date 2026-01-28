@@ -28,7 +28,7 @@ interface BoardProps {
 
 export function Board({ initialPRD, onBackToPRD }: BoardProps) {
   const { tasks, isLoading, createTask, updateTask, deleteTask, moveTask, setTasks } = useTasks();
-  const { isConnected, claudeProgress, onTaskCreated, onTaskUpdated, onTaskDeleted } = useWebSocket();
+  const { isConnected, claudeProgress, ralphProgress, onTaskCreated, onTaskUpdated, onTaskDeleted } = useWebSocket();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -162,6 +162,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
           <StatusPanel
             progress={claudeProgress}
+            ralphProgress={ralphProgress}
             isConnected={isConnected}
             tasks={tasks}
           />

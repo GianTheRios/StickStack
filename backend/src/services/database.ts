@@ -25,10 +25,35 @@ export async function initDatabase(): Promise<void> {
       status TEXT DEFAULT 'backlog',
       priority TEXT DEFAULT 'medium',
       claude_output TEXT,
+      ralph_enabled INTEGER DEFAULT 0,
+      ralph_max_iterations INTEGER DEFAULT 10,
+      ralph_completion_promise TEXT DEFAULT 'TASK_COMPLETE',
+      ralph_current_iteration INTEGER DEFAULT 0,
+      ralph_status TEXT,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
   `);
+
+  // Add Ralph columns if they don't exist (for existing databases)
+  const columns = db.exec("PRAGMA table_info(tasks)");
+  const columnNames = columns[0]?.values.map((row) => row[1] as string) || [];
+
+  if (!columnNames.includes('ralph_enabled')) {
+    db.run('ALTER TABLE tasks ADD COLUMN ralph_enabled INTEGER DEFAULT 0');
+  }
+  if (!columnNames.includes('ralph_max_iterations')) {
+    db.run('ALTER TABLE tasks ADD COLUMN ralph_max_iterations INTEGER DEFAULT 10');
+  }
+  if (!columnNames.includes('ralph_completion_promise')) {
+    db.run("ALTER TABLE tasks ADD COLUMN ralph_completion_promise TEXT DEFAULT 'TASK_COMPLETE'");
+  }
+  if (!columnNames.includes('ralph_current_iteration')) {
+    db.run('ALTER TABLE tasks ADD COLUMN ralph_current_iteration INTEGER DEFAULT 0');
+  }
+  if (!columnNames.includes('ralph_status')) {
+    db.run('ALTER TABLE tasks ADD COLUMN ralph_status TEXT');
+  }
 
   saveDatabase();
 }
@@ -85,7 +110,7 @@ export function updateTask(id: string, input: UpdateTaskInput): Task | undefined
   if (!existing) return undefined;
 
   const updates: string[] = [];
-  const values: (string | null)[] = [];
+  const values: (string | number | null)[] = [];
 
   if (input.title !== undefined) {
     updates.push('title = ?');
@@ -106,6 +131,26 @@ export function updateTask(id: string, input: UpdateTaskInput): Task | undefined
   if (input.claude_output !== undefined) {
     updates.push('claude_output = ?');
     values.push(input.claude_output);
+  }
+  if (input.ralph_enabled !== undefined) {
+    updates.push('ralph_enabled = ?');
+    values.push(input.ralph_enabled ? 1 : 0);
+  }
+  if (input.ralph_max_iterations !== undefined) {
+    updates.push('ralph_max_iterations = ?');
+    values.push(input.ralph_max_iterations);
+  }
+  if (input.ralph_completion_promise !== undefined) {
+    updates.push('ralph_completion_promise = ?');
+    values.push(input.ralph_completion_promise);
+  }
+  if (input.ralph_current_iteration !== undefined) {
+    updates.push('ralph_current_iteration = ?');
+    values.push(input.ralph_current_iteration);
+  }
+  if (input.ralph_status !== undefined) {
+    updates.push('ralph_status = ?');
+    values.push(input.ralph_status);
   }
 
   if (updates.length > 0) {
