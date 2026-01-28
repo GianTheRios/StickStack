@@ -1,5 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ThemeToggle } from './ThemeToggle';
+
+const STORAGE_KEY = 'stickstack_project_settings';
 
 interface PRDUploadProps {
   onPRDParsed: (prd: ParsedPRD) => void;
@@ -122,6 +124,35 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [markdown, setMarkdown] = useState('');
   const [error, setError] = useState('');
+  const [projectDirectory, setProjectDirectory] = useState('');
+
+  // Load project directory from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setProjectDirectory(parsed.projectDirectory || '');
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, []);
+
+  // Save project directory to localStorage when it changes
+  const handleProjectDirectoryChange = (value: string) => {
+    setProjectDirectory(value);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const existing = saved ? JSON.parse(saved) : {};
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...existing,
+        projectDirectory: value,
+      }));
+    } catch {
+      // Ignore errors
+    }
+  };
 
   const handleFile = useCallback((file: File) => {
     if (!file.name.endsWith('.md') && file.type !== 'text/markdown' && file.type !== 'text/plain') {
@@ -183,7 +214,7 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
 
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Claude Kanban</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">StickStack</h1>
           <p className="text-gray-500 dark:text-gray-400">Upload your PRD to get started</p>
         </div>
 
@@ -202,7 +233,20 @@ export function PRDUpload({ onPRDParsed }: PRDUploadProps) {
               }
             `}
           >
-            <div className="text-4xl mb-3">📄</div>
+            <div className="mb-3 flex justify-center">
+              <svg viewBox="0 0 40 40" className="w-12 h-12 drop-shadow-md">
+                {/* Main sticky note body */}
+                <path d="M4 4 H36 V28 L28 36 H4 Z" fill="#FFEB3B" />
+                {/* Corner fold */}
+                <path d="M28 28 L36 28 L28 36 Z" fill="#FDD835" />
+                {/* Lines on the note */}
+                <g opacity="0.25" stroke="#D4A017" strokeWidth="1.5" strokeLinecap="round">
+                  <line x1="8" y1="12" x2="26" y2="12" />
+                  <line x1="8" y1="18" x2="22" y2="18" />
+                  <line x1="8" y1="24" x2="18" y2="24" />
+                </g>
+              </svg>
+            </div>
             <p className="text-gray-600 dark:text-gray-300 mb-2">
               Drag & drop your <span className="font-semibold">PRD.md</span> file here
             </p>
@@ -262,8 +306,35 @@ A brief description of your project...
               transition-all resize-none"
           />
 
+          {/* Project directory input */}
+          <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-base">📁</span>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Project Directory
+              </label>
+              <span className="text-xs text-gray-400 dark:text-gray-500">(optional)</span>
+            </div>
+            <input
+              type="text"
+              value={projectDirectory}
+              onChange={(e) => handleProjectDirectoryChange(e.target.value)}
+              placeholder="/Users/you/your-project"
+              className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2
+                text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 font-mono
+                focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors"
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+              Where's your code? Point this to your project folder and we'll:
+            </p>
+            <ul className="text-xs text-gray-400 dark:text-gray-500 mt-1 space-y-0.5 ml-3">
+              <li>• Scan your code to find tasks you've already finished</li>
+              <li>• Let Claude read and edit files when you start a task</li>
+            </ul>
+          </div>
+
           {error && (
-            <p className="text-red-500 dark:text-red-400 text-sm mt-2">{error}</p>
+            <p className="text-red-500 dark:text-red-400 text-sm mt-3">{error}</p>
           )}
 
           {/* Parse button */}

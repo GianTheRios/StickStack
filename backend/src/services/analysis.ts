@@ -18,44 +18,38 @@ interface ClaudeAnalysisOutput {
   results: AnalysisResult[];
 }
 
-const ANALYSIS_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes
+const ANALYSIS_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
 /**
  * Build the prompt for Claude to analyze the codebase
  */
 function buildAnalysisPrompt(tasks: TaskInput[]): string {
   const taskList = tasks
-    .map((task, index) => `${index + 1}. "${task.title}" - ${task.description || 'No description'}`)
+    .map((task, index) => `${index + 1}. "${task.title}"`)
     .join('\n');
 
-  return `Analyze this codebase to determine which PRD tasks are already complete.
+  return `Analyze this codebase to determine which tasks are already implemented.
 
 TASKS:
 ${taskList}
 
-INSTRUCTIONS:
-1. Use Glob and Grep to explore the codebase structure and find relevant files
-2. Use Read to examine files that might contain implementations of these tasks
-3. Look for evidence that each task has been completed (e.g., relevant functions, components, routes, tests)
-4. Be thorough but efficient - check key files that would indicate completion
+APPROACH:
+1. Start with glob to understand the project structure
+2. Use grep to find task-related keywords (component names, features, routes)
+3. Read files to verify implementation when you find matches
+4. Be efficient - use grep before reading full files
 
-OUTPUT FORMAT (JSON only, no markdown code blocks):
+OUTPUT FORMAT (JSON only, no markdown):
 {
   "results": [
-    {
-      "taskTitle": "exact title from above",
-      "status": "complete" | "partial" | "not_started" | "unknown",
-      "confidence": "high" | "medium" | "low",
-      "evidence": "Brief explanation of what you found"
-    }
+    {"taskTitle": "exact title", "status": "complete|partial|not_started", "confidence": "high|medium|low", "evidence": "brief explanation"}
   ]
 }
 
 RULES:
-- Only mark "complete" with "high" confidence if you found clear evidence
-- When uncertain, prefer "not_started" - it's better to let users mark tasks done manually
-- "partial" means you found some but not all expected implementation
-- Provide one result object for each task above
+- Mark "complete" with "high" confidence only if you found clear evidence
+- When uncertain, default to "not_started"
+- Keep evidence concise (1 sentence)
 - Output ONLY valid JSON, nothing else`;
 }
 
@@ -98,12 +92,13 @@ export async function analyzeCodebase(
     let fullOutput = '';
     let timedOut = false;
 
-    // Spawn claude with read-only tools only
+    // Spawn claude with read-only tools, using Haiku for speed
     const claudeArgs = [
       '-p', prompt,
       '--permission-mode', 'bypassPermissions',
       '--allowedTools', 'Read Glob Grep',
       '--output-format', 'text',
+      '--model', 'haiku',
     ];
 
     broadcast?.('analysis:start', { taskCount: tasks.length });
@@ -118,7 +113,7 @@ export async function analyzeCodebase(
     const timeoutId = setTimeout(() => {
       timedOut = true;
       claudeProcess.kill('SIGTERM');
-      console.log('Analysis timed out after 3 minutes');
+      console.log('Analysis timed out after 2 minutes');
     }, ANALYSIS_TIMEOUT_MS);
 
     claudeProcess.stdout?.on('data', (data: Buffer) => {
