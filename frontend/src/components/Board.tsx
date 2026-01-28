@@ -23,8 +23,17 @@ import type { Task, TaskStatus } from '../types';
 import { COLUMNS } from '../types';
 import type { ParsedPRD } from './PRDUpload';
 
-// Celebration confetti burst
+// Celebration confetti burst (debounced to prevent spam during bulk imports)
+let confettiTimeout: ReturnType<typeof setTimeout> | null = null;
+
 function celebrateCompletion() {
+  // Debounce: only fire once even if multiple tasks complete at the same time
+  if (confettiTimeout) return;
+
+  confettiTimeout = setTimeout(() => {
+    confettiTimeout = null;
+  }, 1000); // 1 second debounce window
+
   const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
 
   // Big initial burst
