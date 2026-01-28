@@ -59,9 +59,22 @@ Please complete this task. Work step by step, explaining what you're doing as yo
     });
 
     // Spawn claude CLI with the prompt
-    const claudeProcess = spawn('claude', ['-p', prompt], {
+    // Use bypassPermissions for non-interactive use
+    // Only allow Bash if explicitly enabled by user
+    const allowedTools = task.allow_shell_commands
+      ? 'Read Edit Write Glob Grep Bash'
+      : 'Read Edit Write Glob Grep';
+
+    const claudeArgs = [
+      '-p', prompt,
+      '--permission-mode', 'bypassPermissions',
+      '--allowedTools', allowedTools,
+    ];
+
+    const claudeProcess = spawn('claude', claudeArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
+      cwd: task.project_directory || undefined,
     });
 
     activeProcesses.set(task.id, claudeProcess);
@@ -162,9 +175,22 @@ async function runSingleIteration(
   return new Promise((resolve) => {
     let fullOutput = '';
 
-    const claudeProcess = spawn('claude', ['-p', prompt], {
+    // Use bypassPermissions for non-interactive use
+    // Only allow Bash if explicitly enabled by user
+    const allowedTools = task.allow_shell_commands
+      ? 'Read Edit Write Glob Grep Bash'
+      : 'Read Edit Write Glob Grep';
+
+    const claudeArgs = [
+      '-p', prompt,
+      '--permission-mode', 'bypassPermissions',
+      '--allowedTools', allowedTools,
+    ];
+
+    const claudeProcess = spawn('claude', claudeArgs, {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env },
+      cwd: task.project_directory || undefined,
     });
 
     activeProcesses.set(task.id, claudeProcess);

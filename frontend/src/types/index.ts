@@ -14,6 +14,8 @@ export interface Task {
   ralph_completion_promise: string;
   ralph_current_iteration: number;
   ralph_status: RalphStatus | null;
+  project_directory: string | null;
+  allow_shell_commands: number;
   phase?: string;
   created_at: string;
   updated_at: string;

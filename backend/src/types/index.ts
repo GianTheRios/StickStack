@@ -14,6 +14,8 @@ export interface Task {
   ralph_completion_promise: string;
   ralph_current_iteration: number;
   ralph_status: RalphStatus | null;
+  project_directory: string | null;
+  allow_shell_commands: number;
   created_at: string;
   updated_at: string;
 }
@@ -35,6 +37,8 @@ export interface UpdateTaskInput {
   ralph_completion_promise?: string;
   ralph_current_iteration?: number;
   ralph_status?: RalphStatus | null;
+  project_directory?: string | null;
+  allow_shell_commands?: boolean;
 }
 
 export interface WebSocketMessage {

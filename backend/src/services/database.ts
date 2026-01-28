@@ -30,6 +30,8 @@ export async function initDatabase(): Promise<void> {
       ralph_completion_promise TEXT DEFAULT 'TASK_COMPLETE',
       ralph_current_iteration INTEGER DEFAULT 0,
       ralph_status TEXT,
+      project_directory TEXT,
+      allow_shell_commands INTEGER DEFAULT 0,
       created_at TEXT DEFAULT (datetime('now')),
       updated_at TEXT DEFAULT (datetime('now'))
     )
@@ -53,6 +55,12 @@ export async function initDatabase(): Promise<void> {
   }
   if (!columnNames.includes('ralph_status')) {
     db.run('ALTER TABLE tasks ADD COLUMN ralph_status TEXT');
+  }
+  if (!columnNames.includes('project_directory')) {
+    db.run('ALTER TABLE tasks ADD COLUMN project_directory TEXT');
+  }
+  if (!columnNames.includes('allow_shell_commands')) {
+    db.run('ALTER TABLE tasks ADD COLUMN allow_shell_commands INTEGER DEFAULT 0');
   }
 
   saveDatabase();
@@ -151,6 +159,14 @@ export function updateTask(id: string, input: UpdateTaskInput): Task | undefined
   if (input.ralph_status !== undefined) {
     updates.push('ralph_status = ?');
     values.push(input.ralph_status);
+  }
+  if (input.project_directory !== undefined) {
+    updates.push('project_directory = ?');
+    values.push(input.project_directory);
+  }
+  if (input.allow_shell_commands !== undefined) {
+    updates.push('allow_shell_commands = ?');
+    values.push(input.allow_shell_commands ? 1 : 0);
   }
 
   if (updates.length > 0) {
