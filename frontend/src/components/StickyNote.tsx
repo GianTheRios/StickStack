@@ -69,7 +69,7 @@ export function StickyNote({ task, onDelete, onClick }: StickyNoteProps) {
         ${isDragging ? 'shadow-note-hover scale-[1.02]' : 'shadow-note hover:shadow-note-hover hover:-translate-y-0.5'}
         relative cursor-grab active:cursor-grabbing
         transition-all duration-150 ease-out
-        w-full
+        w-full max-w-[220px]
         rounded-sm
         p-3
       `}

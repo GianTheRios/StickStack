@@ -11,6 +11,7 @@ import {
 import { Column } from './Column';
 import { StickyNote } from './StickyNote';
 import { StatusPanel } from './StatusPanel';
+import { ProgressTracker } from './ProgressTracker';
 import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
 import { ThemeToggle } from './ThemeToggle';
@@ -165,6 +166,8 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
             tasks={tasks}
           />
         </header>
+
+        <ProgressTracker tasks={tasks} onToggleTask={moveTask} />
 
         {/* Board */}
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
