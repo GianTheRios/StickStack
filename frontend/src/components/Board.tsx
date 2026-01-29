@@ -216,11 +216,11 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-      <div className="p-6 max-w-[1500px] mx-auto">
+      <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
         {/* Header */}
-        <header className="mb-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-4">
+        <header className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-5">
+            <div className="flex items-center gap-3 sm:gap-4">
               {onBackToPRD && (
                 <button
                   onClick={onBackToPRD}
@@ -232,26 +232,27 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
                   </svg>
                 </button>
               )}
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight truncate max-w-[200px] sm:max-w-none">
                 {initialPRD?.title || 'StickStack'}
               </h1>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
-                  px-4 py-2 rounded-xl
+                  px-3 sm:px-4 py-2 rounded-xl
                   text-sm font-semibold
                   border-2 border-gray-900 dark:border-gray-600
                   shadow-3d-sm
                   hover:shadow-3d hover:-translate-x-px hover:-translate-y-px
                   active:shadow-none active:translate-x-[3px] active:translate-y-[3px]
                   transition-all duration-150
-                  flex items-center gap-2"
+                  flex items-center gap-1 sm:gap-2"
               >
                 <span className="text-base leading-none">+</span>
-                New Task
+                <span className="hidden xs:inline">New Task</span>
+                <span className="xs:hidden">New</span>
               </button>
             </div>
           </div>
@@ -274,7 +275,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
         {/* Board */}
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex gap-5 overflow-x-auto pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 pb-6">
             {COLUMNS.map((column) => (
               <Column
                 key={column.id}
@@ -289,7 +290,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
           <DragOverlay>
             {activeTask && (
-              <div className="rotate-3 scale-105 w-[260px]">
+              <div className="rotate-3 scale-105 w-[200px] sm:w-[220px] lg:w-[260px]">
                 <StickyNote task={activeTask} onDelete={() => {}} />
               </div>
             )}

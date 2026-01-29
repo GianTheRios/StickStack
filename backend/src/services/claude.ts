@@ -1,11 +1,22 @@
 import { spawn, ChildProcess } from 'child_process';
-import type { Task, RalphStatus } from '../types/index.js';
+import type { Task, RalphStatus, ClaudeModel } from '../types/index.js';
 import { updateTask, getTaskById } from './database.js';
 
 type BroadcastFn = (type: string, payload: unknown) => void;
 
 const activeProcesses = new Map<string, ChildProcess>();
 const activeRalphLoops = new Map<string, { cancelled: boolean }>();
+
+// Map user-friendly model names to Claude CLI model IDs
+const MODEL_IDS: Record<ClaudeModel, string> = {
+  opus: 'claude-opus-4-5-20250514',
+  sonnet: 'claude-sonnet-4-20250514',
+  haiku: 'claude-haiku-3-5-20241022',
+};
+
+function getModelId(model: ClaudeModel | null): string {
+  return MODEL_IDS[model || 'opus'];
+}
 
 /**
  * Check if output contains a completion promise tag
@@ -20,19 +31,13 @@ function checkCompletionPromise(output: string, expected: string): boolean {
  * Build the prompt for a Ralph iteration
  */
 function buildIterationPrompt(task: Task, iteration: number, maxIterations: number): string {
-  return `You are working on a kanban task. Here are the details:
-
-**Task Title:** ${task.title}
-
-**Task Description:** ${task.description || 'No description provided.'}
-
+  return `**Task:** ${task.title}
+${task.description ? `**Details:** ${task.description}` : ''}
 **Iteration:** ${iteration}/${maxIterations}
 
-Please work on this task. When the task is TRULY complete and you have verified everything works correctly, output the following tag:
+Work efficiently. When COMPLETE and verified, output: <promise>${task.ralph_completion_promise}</promise>
 
-<promise>${task.ralph_completion_promise}</promise>
-
-Only include this promise tag when the task is genuinely finished. If you need more iterations to complete the work, just continue working without the promise tag.`;
+Only include the promise tag when genuinely finished.`;
 }
 
 export async function startClaudeTask(
@@ -42,13 +47,16 @@ export async function startClaudeTask(
   // Cancel any existing process for this task
   cancelClaudeTask(task.id);
 
-  const prompt = `You are working on a kanban task. Here are the details:
+  const prompt = `Complete this task efficiently:
 
-**Task Title:** ${task.title}
+**Task:** ${task.title}
+${task.description ? `**Details:** ${task.description}` : ''}
 
-**Task Description:** ${task.description || 'No description provided.'}
-
-Please complete this task. Work step by step, explaining what you're doing as you go.`;
+APPROACH:
+- Read relevant files first to understand the codebase
+- Make focused changes - don't over-engineer
+- Keep explanations brief - focus on doing, not explaining
+- Test your changes work if possible`;
 
   let fullOutput = '';
 
@@ -69,6 +77,7 @@ Please complete this task. Work step by step, explaining what you're doing as yo
       '-p', prompt,
       '--permission-mode', 'bypassPermissions',
       '--allowedTools', allowedTools,
+      '--model', getModelId(task.claude_model),
     ];
 
     const claudeProcess = spawn('claude', claudeArgs, {
@@ -185,6 +194,7 @@ async function runSingleIteration(
       '-p', prompt,
       '--permission-mode', 'bypassPermissions',
       '--allowedTools', allowedTools,
+      '--model', getModelId(task.claude_model),
     ];
 
     const claudeProcess = spawn('claude', claudeArgs, {

@@ -62,21 +62,21 @@ export function StickyNote({ task, onDelete, onClick }: StickyNoteProps) {
       }}
       {...attributes}
       onPointerDown={handlePointerDown}
-      onKeyDown={listeners?.onKeyDown}
+      onKeyDown={listeners?.onKeyDown as React.KeyboardEventHandler<HTMLDivElement> | undefined}
       onClick={handleClick}
       className={`
         ${styles.bg}
         ${isDragging ? 'shadow-note-hover scale-[1.02]' : 'shadow-note hover:shadow-note-hover hover:-translate-y-0.5'}
         relative cursor-grab active:cursor-grabbing
         transition-all duration-150 ease-out
-        w-full max-w-[220px]
+        w-full max-w-[180px] sm:max-w-[200px] lg:max-w-[220px]
         rounded-sm
-        p-3
+        p-2 sm:p-3
       `}
     >
       {/* Priority dot */}
-      <div className="absolute top-2.5 left-2.5">
-        <div className={`${styles.dot} w-2 h-2 rounded-full`} />
+      <div className="absolute top-2 sm:top-2.5 left-2 sm:left-2.5">
+        <div className={`${styles.dot} w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full`} />
       </div>
 
       {/* Delete button */}
@@ -85,42 +85,42 @@ export function StickyNote({ task, onDelete, onClick }: StickyNoteProps) {
           e.stopPropagation();
           onDelete(task.id);
         }}
-        className="absolute top-1.5 right-1.5 w-6 h-6 flex items-center justify-center
+        className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 w-6 h-6 sm:w-6 sm:h-6 flex items-center justify-center
           text-black/30 hover:text-black/70 hover:bg-black/5
-          rounded transition-colors text-lg leading-none"
+          rounded transition-colors text-base sm:text-lg leading-none"
         title="Delete task"
       >
         ×
       </button>
 
       {/* Content */}
-      <div className="mt-4 h-[calc(100%-2rem)] flex flex-col">
+      <div className="mt-3 sm:mt-4 h-[calc(100%-1.5rem)] sm:h-[calc(100%-2rem)] flex flex-col">
         {/* Task title */}
-        <h3 className="font-hand text-lg font-semibold text-gray-900 leading-tight mb-1.5 pr-4 line-clamp-3">
+        <h3 className="font-hand text-base sm:text-lg font-semibold text-gray-900 leading-tight mb-1 sm:mb-1.5 pr-3 sm:pr-4 line-clamp-2 sm:line-clamp-3">
           {task.title}
         </h3>
 
         {/* Description */}
         {task.description && (
-          <p className="text-[11px] text-gray-600 leading-relaxed line-clamp-2 flex-shrink-0">
+          <p className="text-[10px] sm:text-[11px] text-gray-600 leading-relaxed line-clamp-2 flex-shrink-0">
             {task.description}
           </p>
         )}
 
         {/* Claude working indicator */}
         {isWorking && (
-          <div className="mt-auto pt-2 flex items-center gap-1.5">
+          <div className="mt-auto pt-1.5 sm:pt-2 flex items-center gap-1 sm:gap-1.5">
             {task.ralph_enabled ? (
               <>
-                <span className="claude-working text-sm">🔄</span>
-                <span className="text-[10px] font-semibold text-sky-600 tracking-wide">
+                <span className="claude-working text-xs sm:text-sm">🔄</span>
+                <span className="text-[9px] sm:text-[10px] font-semibold text-sky-600 tracking-wide">
                   {task.ralph_current_iteration}/{task.ralph_max_iterations}
                 </span>
               </>
             ) : (
               <>
-                <span className="claude-working text-sm">✏️</span>
-                <span className="text-[10px] font-semibold text-orange-500 tracking-wide">
+                <span className="claude-working text-xs sm:text-sm">✏️</span>
+                <span className="text-[9px] sm:text-[10px] font-semibold text-orange-500 tracking-wide">
                   Working
                 </span>
               </>
@@ -130,9 +130,9 @@ export function StickyNote({ task, onDelete, onClick }: StickyNoteProps) {
 
         {/* Ralph enabled badge (when not working) */}
         {!isWorking && !!task.ralph_enabled && (
-          <div className="mt-auto pt-2 flex items-center gap-1">
-            <span className="text-xs">🔄</span>
-            <span className="text-[9px] font-medium text-sky-500 dark:text-sky-400">
+          <div className="mt-auto pt-1.5 sm:pt-2 flex items-center gap-1">
+            <span className="text-[10px] sm:text-xs">🔄</span>
+            <span className="text-[8px] sm:text-[9px] font-medium text-sky-500 dark:text-sky-400">
               Ralph
             </span>
           </div>

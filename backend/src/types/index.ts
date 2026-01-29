@@ -1,6 +1,7 @@
 export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'done';
 export type TaskPriority = 'low' | 'medium' | 'high';
 export type RalphStatus = 'iterating' | 'completed' | 'max_reached' | 'cancelled';
+export type ClaudeModel = 'opus' | 'sonnet' | 'haiku';
 
 export interface Task {
   id: string;
@@ -9,6 +10,7 @@ export interface Task {
   status: TaskStatus;
   priority: TaskPriority;
   claude_output: string | null;
+  claude_model: ClaudeModel | null;
   ralph_enabled: number; // SQLite uses 0/1 for boolean
   ralph_max_iterations: number;
   ralph_completion_promise: string;
@@ -32,6 +34,7 @@ export interface UpdateTaskInput {
   status?: TaskStatus;
   priority?: TaskPriority;
   claude_output?: string;
+  claude_model?: ClaudeModel | null;
   ralph_enabled?: boolean;
   ralph_max_iterations?: number;
   ralph_completion_promise?: string;

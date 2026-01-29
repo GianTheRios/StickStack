@@ -62,6 +62,9 @@ export async function initDatabase(): Promise<void> {
   if (!columnNames.includes('allow_shell_commands')) {
     db.run('ALTER TABLE tasks ADD COLUMN allow_shell_commands INTEGER DEFAULT 0');
   }
+  if (!columnNames.includes('claude_model')) {
+    db.run("ALTER TABLE tasks ADD COLUMN claude_model TEXT DEFAULT 'opus'");
+  }
 
   saveDatabase();
 }
@@ -139,6 +142,10 @@ export function updateTask(id: string, input: UpdateTaskInput): Task | undefined
   if (input.claude_output !== undefined) {
     updates.push('claude_output = ?');
     values.push(input.claude_output);
+  }
+  if (input.claude_model !== undefined) {
+    updates.push('claude_model = ?');
+    values.push(input.claude_model);
   }
   if (input.ralph_enabled !== undefined) {
     updates.push('ralph_enabled = ?');

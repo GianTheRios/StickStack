@@ -44,8 +44,8 @@ export function Column({ id, title, tasks, onDeleteTask, onTaskClick }: ColumnPr
     <div
       ref={setNodeRef}
       className={`
-        flex-1 min-w-[280px]
-        bg-white dark:bg-gray-900 rounded-2xl
+        w-full
+        bg-white dark:bg-gray-900 rounded-xl sm:rounded-2xl
         border-2 border-gray-900 dark:border-gray-600
         shadow-3d
         ${isOver ? 'shadow-3d-hover -translate-x-px -translate-y-px' : ''}
@@ -53,13 +53,13 @@ export function Column({ id, title, tasks, onDeleteTask, onTaskClick }: ColumnPr
       `}
     >
       {/* Column header */}
-      <div className="px-4 py-3 border-b-2 border-gray-900 dark:border-gray-600">
+      <div className="px-3 sm:px-4 py-2.5 sm:py-3 border-b-2 border-gray-900 dark:border-gray-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={`text-base ${id === 'done' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
+            <span className={`text-sm sm:text-base ${id === 'done' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : ''}`}>
               {config.icon}
             </span>
-            <h2 className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+            <h2 className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-gray-100">
               {title}
             </h2>
           </div>
@@ -68,15 +68,15 @@ export function Column({ id, title, tasks, onDeleteTask, onTaskClick }: ColumnPr
           </span>
         </div>
         {isClaudeColumn && (
-          <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-[10px] sm:text-[11px] text-gray-400 dark:text-gray-500 mt-1">
             Drop here to start Claude
           </p>
         )}
       </div>
 
       {/* Tasks area */}
-      <div className="p-3 min-h-[200px] max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin">
-        <div className="flex flex-col gap-3 items-center">
+      <div className="p-2 sm:p-3 min-h-[150px] sm:min-h-[200px] max-h-[300px] sm:max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin">
+        <div className="flex flex-col gap-2 sm:gap-3 items-center">
           {visibleTasks.map((task) => (
             <StickyNote
               key={task.id}
@@ -135,15 +135,15 @@ export function Column({ id, title, tasks, onDeleteTask, onTaskClick }: ColumnPr
         {tasks.length === 0 && (
           <div className={`
             flex flex-col items-center justify-center
-            py-12 px-4 h-[180px]
-            border-2 border-dashed rounded-xl
+            py-8 sm:py-12 px-3 sm:px-4 h-[120px] sm:h-[180px]
+            border-2 border-dashed rounded-lg sm:rounded-xl
             ${isOver ? 'border-orange-400 bg-orange-50 dark:bg-orange-950' : 'border-gray-200 dark:border-gray-700'}
             transition-colors duration-150
           `}>
-            <span className={`text-2xl mb-2 ${isOver ? 'opacity-100' : 'opacity-30'}`}>
+            <span className={`text-xl sm:text-2xl mb-2 ${isOver ? 'opacity-100' : 'opacity-30'}`}>
               {config.icon}
             </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
+            <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 text-center">
               {isClaudeColumn ? 'Drop to assign to Claude' : 'Drop tasks here'}
             </span>
           </div>
