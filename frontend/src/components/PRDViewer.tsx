@@ -11,7 +11,7 @@ interface PRDViewerProps {
   projectDirectory?: string;
 }
 
-const API_URL = 'http://localhost:3001';
+const API_URL = '';
 
 export function PRDViewer({ prd, onStartProject, onBack, isLoading, isAnalyzing, projectDirectory }: PRDViewerProps) {
   const totalTasks = prd.phases.reduce((sum, phase) => sum + phase.tasks.length, 0);

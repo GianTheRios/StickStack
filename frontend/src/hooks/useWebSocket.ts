@@ -29,7 +29,7 @@ export function useWebSocket(): UseWebSocketReturn {
 
   useEffect(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//localhost:3001`;
+    const wsUrl = `${protocol}//${window.location.host}`;
 
     const connect = () => {
       const ws = new WebSocket(wsUrl);

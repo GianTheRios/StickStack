@@ -1,4 +1,4 @@
-# Claude Kanban
+# StickStack
 
 A full-stack kanban board that triggers Claude Code to work on tasks via drag-and-drop sticky notes.
 
@@ -90,7 +90,7 @@ The app runs on http://localhost:5173
 ## Project Structure
 
 ```
-claude-kanban/
+StickStack/
 ├── frontend/          # React + Vite frontend
 │   └── src/
 │       ├── components/  # UI components

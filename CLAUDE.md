@@ -1,4 +1,4 @@
-# Claude Kanban - Project Context
+# StickStack - Project Context
 
 ## What This Is
 A SaaS product that turns PRD markdown files into visual roadmaps, then lets users execute tasks via Claude Code from a kanban board UI.
@@ -32,7 +32,7 @@ Complete user flow implemented:
 
 ## Project Structure
 ```
-/Users/giantherios/Desktop/claude-kanban/
+/Users/giantherios/Desktop/StickStack/
 ├── frontend/          # React app (localhost:5175)
 │   └── src/
 │       ├── components/
@@ -65,7 +65,7 @@ Complete user flow implemented:
 ### User Flow
 1. **Upload** — User drops PRD.md file
 2. **Visualize** — App renders beautiful PRD view (phases, tasks, tech stack)
-3. **Connect** — User runs `npx claude-kanban-connect --token=XXX` locally
+3. **Connect** — User runs `npx stickstack-connect --token=XXX` locally
 4. **Execute** — Kanban board with sticky notes, drag to "In Progress" triggers Claude
 
 ### Key Features
@@ -103,6 +103,6 @@ cd frontend && npm run dev
 
 ## Next Steps
 1. Build multi-agent task execution (orchestrator spawns fresh Claude per task)
-2. Create local bridge CLI concept (`npx claude-kanban-connect`)
+2. Create local bridge CLI concept (`npx stickstack-connect`)
 3. Add phase-based task organization in kanban view
 4. Improve Claude output display in StatusPanel

@@ -1,4 +1,4 @@
-# Claude Kanban Skill
+# StickStack Skill
 
 You are working on a task from a Kanban board. The task has been assigned to you and you should complete it according to the description provided.
 
@@ -19,7 +19,7 @@ You are working on a task from a Kanban board. The task has been assigned to you
 
 ## Context
 
-This task comes from the Claude Kanban board application. When you complete this task:
+This task comes from the StickStack board application. When you complete this task:
 - Your progress is streamed in real-time to the UI
 - The task will automatically move to "Done" when complete
 - Your output will be saved with the task for reference

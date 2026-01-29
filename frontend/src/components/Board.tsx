@@ -271,7 +271,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
           onSettingsChange={updateSettings}
         />
 
-        <ProgressTracker tasks={tasks} onToggleTask={moveTask} />
+        <ProgressTracker tasks={tasks} onToggleTask={async (id, status) => { await moveTask(id, status); }} />
 
         {/* Board */}
         <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>

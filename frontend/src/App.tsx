@@ -4,7 +4,7 @@ import { PRDUpload, type ParsedPRD } from './components/PRDUpload';
 import { PRDViewer } from './components/PRDViewer';
 import type { ViewMode, AnalysisResult } from './types';
 
-const API_URL = 'http://localhost:3001';
+const API_URL = '';
 const STORAGE_KEY = 'stickstack_project_settings';
 
 function getProjectDirectory(): string {

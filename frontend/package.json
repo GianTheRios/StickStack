@@ -1,5 +1,5 @@
 {
-  "name": "claude-kanban-frontend",
+  "name": "stickstack-frontend",
   "version": "1.0.0",
   "type": "module",
   "scripts": {

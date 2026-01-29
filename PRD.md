@@ -1,4 +1,4 @@
-# Claude Kanban
+# StickStack
 
 ## Overview
 A SaaS product that transforms PRD markdown files into visual roadmaps and lets developers execute tasks via Claude Code from a beautiful kanban board UI. Built for "vibecoders" who want visual progress tracking while using AI-assisted development. The app is local-first — code never leaves the user's machine.
