@@ -7,11 +7,11 @@ type BroadcastFn = (type: string, payload: unknown) => void;
 const activeProcesses = new Map<string, ChildProcess>();
 const activeRalphLoops = new Map<string, { cancelled: boolean }>();
 
-// Map user-friendly model names to Claude CLI model IDs
+// Map user-friendly model names to Claude CLI model aliases
 const MODEL_IDS: Record<ClaudeModel, string> = {
-  opus: 'claude-opus-4-5-20250514',
-  sonnet: 'claude-sonnet-4-20250514',
-  haiku: 'claude-haiku-3-5-20241022',
+  opus: 'opus',
+  sonnet: 'sonnet',
+  haiku: 'haiku',
 };
 
 function getModelId(model: ClaudeModel | null): string {
