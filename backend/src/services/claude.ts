@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import type { Task, RalphStatus, ClaudeModel } from '../types/index.js';
 import { updateTask, getTaskById } from './database.js';
+import { sanitizeTaskText, validateProjectDirectory, detectSuspiciousContent } from '../utils/security.js';
 
 type BroadcastFn = (type: string, payload: unknown) => void;
 
@@ -31,8 +32,11 @@ function checkCompletionPromise(output: string, expected: string): boolean {
  * Build the prompt for a Ralph iteration
  */
 function buildIterationPrompt(task: Task, iteration: number, maxIterations: number): string {
-  return `**Task:** ${task.title}
-${task.description ? `**Details:** ${task.description}` : ''}
+  const safeTitle = sanitizeTaskText(task.title);
+  const safeDescription = sanitizeTaskText(task.description);
+
+  return `**Task:** ${safeTitle}
+${safeDescription ? `**Details:** ${safeDescription}` : ''}
 **Iteration:** ${iteration}/${maxIterations}
 
 Work efficiently. When COMPLETE and verified, output: <promise>${task.ralph_completion_promise}</promise>
@@ -47,10 +51,32 @@ export async function startClaudeTask(
   // Cancel any existing process for this task
   cancelClaudeTask(task.id);
 
+  // Validate project directory if set
+  if (task.project_directory) {
+    const pathValidation = validateProjectDirectory(task.project_directory);
+    if (!pathValidation.valid) {
+      broadcast('claude:progress', {
+        taskId: task.id,
+        message: `Error: ${pathValidation.error}`,
+      });
+      return;
+    }
+  }
+
+  // Sanitize task inputs to prevent prompt injection
+  const safeTitle = sanitizeTaskText(task.title);
+  const safeDescription = sanitizeTaskText(task.description);
+
+  // Log any suspicious content (for monitoring)
+  const warnings = detectSuspiciousContent(task.title + ' ' + (task.description || ''));
+  if (warnings.length > 0) {
+    console.warn(`[Security] Task ${task.id} has suspicious content:`, warnings);
+  }
+
   const prompt = `Complete this task efficiently:
 
-**Task:** ${task.title}
-${task.description ? `**Details:** ${task.description}` : ''}
+**Task:** ${safeTitle}
+${safeDescription ? `**Details:** ${safeDescription}` : ''}
 
 APPROACH:
 - Read relevant files first to understand the codebase
