@@ -84,3 +84,23 @@ export interface RalphCompletePayload {
   iteration: number;
   reason: 'promise_fulfilled' | 'max_reached' | 'cancelled' | 'error';
 }
+
+// Chat types
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatSendPayload {
+  message: string;
+  projectDirectory?: string;
+  allowShellCommands?: boolean;
+}
+
+export interface ChatResponsePayload {
+  messageId: string;
+  content: string;
+  done: boolean;
+}

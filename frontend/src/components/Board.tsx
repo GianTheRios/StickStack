@@ -17,6 +17,7 @@ import { CreateTaskModal } from './CreateTaskModal';
 import { TaskDetailModal } from './TaskDetailModal';
 import { ThemeToggle } from './ThemeToggle';
 import { ProjectSettings, useProjectSettings } from './ProjectSettings';
+import { ChatPanel } from './ChatPanel';
 import { useTasks } from '../hooks/useTasks';
 import { useWebSocket } from '../hooks/useWebSocket';
 import type { Task, TaskStatus } from '../types';
@@ -92,6 +93,7 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const prevTaskStatusRef = useRef<Map<string, TaskStatus>>(new Map());
 
   // Configure drag sensor with activation constraint
@@ -216,7 +218,11 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
-      <div className="p-4 sm:p-6 max-w-[1500px] mx-auto">
+      <div
+        className={`p-4 sm:p-6 transition-all duration-300 ease-out ${
+          isChatOpen ? 'lg:mr-[450px] sm:mr-[400px]' : ''
+        }`}
+      >
         {/* Header */}
         <header className="mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-5">
@@ -238,6 +244,21 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+                  px-3 sm:px-4 py-2 rounded-xl
+                  text-sm font-semibold
+                  border-2 border-gray-900 dark:border-gray-600
+                  shadow-3d-sm
+                  hover:shadow-3d hover:-translate-x-px hover:-translate-y-px
+                  active:shadow-none active:translate-x-[3px] active:translate-y-[3px]
+                  transition-all duration-150
+                  flex items-center gap-1 sm:gap-2"
+              >
+                <span className="text-base leading-none">💬</span>
+                <span className="hidden xs:inline">Chat</span>
+              </button>
               <button
                 onClick={() => setIsCreateModalOpen(true)}
                 className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
@@ -319,6 +340,13 @@ export function Board({ initialPRD, onBackToPRD }: BoardProps) {
         onMoveToInProgress={async (id) => {
           await moveTask(id, 'in_progress');
         }}
+      />
+
+      <ChatPanel
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        projectDirectory={projectDirectory}
+        allowShellCommands={allowShellCommands}
       />
     </div>
   );

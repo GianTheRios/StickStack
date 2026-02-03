@@ -66,8 +66,23 @@ export interface WebSocketMessage {
     | 'claude:complete'
     | 'ralph:iteration_start'
     | 'ralph:iteration_complete'
-    | 'ralph:complete';
+    | 'ralph:complete'
+    | 'chat:response';
   payload: unknown;
+}
+
+// Chat types
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+}
+
+export interface ChatResponsePayload {
+  messageId: string;
+  content: string;
+  done: boolean;
 }
 
 export interface ClaudeProgress {

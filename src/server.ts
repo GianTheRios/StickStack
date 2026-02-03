@@ -9,6 +9,8 @@ import { createTasksRouter } from './routes/tasks.js';
 import { createPrdRouter } from './routes/prd.js';
 import { createAnalysisRouter } from './routes/analysis.js';
 import { initDatabase } from './services/database.js';
+import { sendChatMessage, cancelChat } from './services/chat.js';
+import type { ChatSendPayload } from './types/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,6 +31,26 @@ export async function startServer(port: number): Promise<Server> {
 
   wss.on('connection', (ws) => {
     clients.add(ws);
+
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        switch (message.type) {
+          case 'chat:send': {
+            const payload = message.payload as ChatSendPayload;
+            sendChatMessage(payload, broadcast);
+            break;
+          }
+          case 'chat:cancel': {
+            cancelChat();
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing WebSocket message:', error);
+      }
+    });
 
     ws.on('close', () => {
       clients.delete(ws);
