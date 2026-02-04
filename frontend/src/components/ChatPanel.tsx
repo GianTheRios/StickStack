@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useChat } from '../hooks/useChat';
 import type { ChatMessage } from '../types';
 
@@ -39,8 +39,6 @@ export function ChatPanel({
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,33 +50,6 @@ export function ChatPanel({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [isOpen]);
-
-  // Click outside to close
-  const handleClickOutside = useCallback(
-    (event: MouseEvent) => {
-      if (
-        isOpen &&
-        panelRef.current &&
-        !panelRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    },
-    [isOpen, onClose]
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      // Small delay to prevent immediate close from the button click
-      const timer = setTimeout(() => {
-        document.addEventListener('mousedown', handleClickOutside);
-      }, 100);
-      return () => {
-        clearTimeout(timer);
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
-    }
-  }, [isOpen, handleClickOutside]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,7 +68,6 @@ export function ChatPanel({
 
   return (
       <div
-        ref={panelRef}
         className={`fixed top-0 right-0 h-full w-full sm:w-[400px] lg:w-[450px] bg-white dark:bg-gray-900 border-l-2 border-gray-900 dark:border-gray-600 shadow-xl z-50 flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
