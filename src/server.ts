@@ -102,7 +102,7 @@ export async function startServer(port: number): Promise<Server> {
   }
 
   return new Promise((resolve) => {
-    server.listen(port, () => {
+    server.listen(port, '127.0.0.1', () => {
       resolve(server);
     });
   });
