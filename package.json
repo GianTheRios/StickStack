@@ -1,6 +1,6 @@
 {
   "name": "@stickstackapp/cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Turn PRD markdown files into visual roadmaps and execute tasks via Claude Code",
   "type": "module",
   "bin": {

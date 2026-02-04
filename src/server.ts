@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { WebSocketServer, WebSocket } from 'ws';
-import { createServer, Server } from 'http';
+import { createServer, Server, IncomingMessage } from 'http';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync } from 'fs';
@@ -15,21 +15,46 @@ import type { ChatSendPayload } from './types/index.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+function isLocalhostOrigin(origin: string | undefined): boolean {
+  if (!origin) return false;
+  try {
+    const url = new URL(origin);
+    return url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
 export async function startServer(port: number): Promise<Server> {
   const app = express();
 
-  // Middleware
-  app.use(cors());
+  // Middleware — only allow requests from localhost origins
+  app.use(cors({
+    origin: (origin, callback) => {
+      // Allow same-origin requests (no origin header) and localhost origins
+      if (!origin || isLocalhostOrigin(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed'));
+      }
+    },
+  }));
   app.use(express.json());
 
   // Create HTTP server
   const server = createServer(app);
 
-  // WebSocket server
+  // WebSocket server — validate origin on connection
   const wss = new WebSocketServer({ server });
   const clients = new Set<WebSocket>();
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', (ws, req: IncomingMessage) => {
+    const origin = req.headers.origin;
+    if (origin && !isLocalhostOrigin(origin)) {
+      ws.close(1008, 'Origin not allowed');
+      return;
+    }
+
     clients.add(ws);
 
     ws.on('message', (data) => {
